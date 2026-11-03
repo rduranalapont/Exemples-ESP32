@@ -1,0 +1,48 @@
+#define BUTTON_PIN 2
+#define DEBOUNCE_TIME 50
+
+int lastSteadyState = LOW;
+int lastFlickerableState = LOW;
+int currentState;
+
+unsigned long lastDebounceTime = 0;
+
+int contadorPulsaciones = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(BUTTON_PIN, INPUT);
+}
+
+bool button() {
+  currentState = digitalRead(BUTTON_PIN);
+
+  if (currentState != lastFlickerableState) {
+    lastDebounceTime = millis();
+    lastFlickerableState = currentState;
+  }
+
+  if ((millis() - lastDebounceTime) > DEBOUNCE_TIME) {
+    if (lastSteadyState != currentState) {
+      lastSteadyState = currentState;
+
+      // Con pull-down externa:
+      if (currentState == HIGH) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+void loop() {
+
+  if (button()) {
+    contadorPulsaciones++;
+
+    Serial.print("Numero de pulsaciones: ");
+    Serial.println(contadorPulsaciones);
+  }
+
+}
