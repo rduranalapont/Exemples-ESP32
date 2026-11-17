@@ -1,0 +1,46 @@
+#include <WiFi.h>
+#include "time.h"
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+
+// Servidor NTP
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = 3600;     // España invierno
+const int daylightOffset_sec = 3600; // Horario de verano
+
+void setup() {
+  Serial.begin(115200);
+
+  Serial.println("Conectando a WiFi...");
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi conectado");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  // Configurar NTP
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
+  Serial.println("Obteniendo hora...");
+}
+
+void loop() {
+  struct tm timeinfo;
+
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("Error obteniendo la hora");
+    delay(2000);
+    return;
+  }
+
+  Serial.println(&timeinfo, "%d/%m/%Y %H:%M:%S");
+
+  delay(1000);
+}
