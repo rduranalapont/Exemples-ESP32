@@ -1,0 +1,102 @@
+#include <WiFi.h>
+#include <time.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+Adafruit_SSD1306 display(
+  SCREEN_WIDTH,
+  SCREEN_HEIGHT,
+  &Wire,
+  -1
+);
+
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+
+void setup() {
+  Serial.begin(115200);
+
+  Wire.begin(21, 22);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("Error OLED");
+    while (true);
+  }
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setCursor(0, 0);
+  display.println("Conectando WiFi...");
+  display.display();
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi conectado");
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("WiFi conectado");
+  display.display();
+
+  // España (UTC+1)
+  configTime(3600, 0, "pool.ntp.org");
+
+  struct tm timeinfo;
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("Sincronizando...");
+  display.display();
+
+  while (!getLocalTime(&timeinfo)) {
+    delay(500);
+  }
+
+  Serial.println("Hora sincronizada");
+}
+
+void loop() {
+
+  struct tm timeinfo;
+
+  if (getLocalTime(&timeinfo)) {
+
+    char hora[16];
+    char fecha[16];
+
+    strftime(hora, sizeof(hora), "%H:%M:%S", &timeinfo);
+    strftime(fecha, sizeof(fecha), "%d/%m/%Y", &timeinfo);
+
+    display.clearDisplay();
+
+    display.setTextSize(1);
+    display.setCursor(25, 0);
+    display.println("RELOJ NTP");
+
+    display.drawLine(0, 12, 127, 12, SSD1306_WHITE);
+
+    display.setTextSize(2);
+    display.setCursor(8, 22);
+    display.println(hora);
+
+    display.setTextSize(1);
+    display.setCursor(25, 54);
+    display.println(fecha);
+
+    display.display();
+  }
+
+  delay(1000);
+}
